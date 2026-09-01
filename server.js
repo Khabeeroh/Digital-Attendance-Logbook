@@ -40,10 +40,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const requireAdmin = (req, res, next) => {
+  // Debug: log the request
+  console.log(`[Admin Middleware] ${req.method} ${req.originalUrl} - path: ${req.path}, baseUrl: ${req.baseUrl}`);
+  
   // Public routes that don't require authentication
-  // Note: when middleware is applied to /api/admin, req.path is relative to that prefix
-  if (req.path === '/login' || req.path === '/logout') {
-    console.log(`[Admin Auth] Allowing public route: ${req.path}`);
+  // Check both absolute and relative paths
+  const pathToCheck = req.path.startsWith('/api') ? req.path : `/api/admin${req.path}`;
+  if (pathToCheck.includes('/login') || pathToCheck.includes('/logout')) {
+    console.log(`[Admin Auth] ✓ Allowing public route: ${pathToCheck}`);
     return next();
   }
 
@@ -51,11 +55,11 @@ const requireAdmin = (req, res, next) => {
   const providedToken = req.headers['x-admin-token'] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
 
   if (cookieAllowsSession || (providedToken && providedToken === ADMIN_TOKEN)) {
-    console.log(`[Admin Auth] Allowing protected route: ${req.path}`);
+    console.log(`[Admin Auth] ✓ Allowing protected route: ${pathToCheck}`);
     return next();
   }
 
-  console.log(`[Admin Auth] Rejecting unauthorized access to: ${req.path}`);
+  console.log(`[Admin Auth] ✗ REJECTING unauthorized access to: ${pathToCheck}`);
   return res.status(403).json({ message: 'Admin authorization required.' });
 };
 
