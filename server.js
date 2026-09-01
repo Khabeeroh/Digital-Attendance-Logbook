@@ -23,10 +23,9 @@ app.disable('x-powered-by');
 
 // CORS configuration - allow all origins
 app.use(cors({
-  origin: function(origin, callback) {
-    callback(null, true); // Allow all origins
-  },
-  credentials: true,
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
 }));
 
 app.use(express.json());
