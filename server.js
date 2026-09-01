@@ -159,6 +159,7 @@ function generateCode() {
 async function sendEmail(to, subject, text, fullName, uniqueCode) {
   const email = String(to || '').trim();
 
+
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailPattern.test(email)) {
@@ -181,13 +182,15 @@ async function sendEmail(to, subject, text, fullName, uniqueCode) {
     service_id: process.env.EMAILJS_SERVICE_ID,
     template_id: process.env.EMAILJS_TEMPLATE_ID,
     user_id: process.env.EMAILJS_PUBLIC_KEY,
+    accessToken: process.env.EMAILJS_PRIVATE_KEY,
 
-    template_params: {
-      to_email: email,
-      full_name: fullName,
-      unique_code: uniqueCode,
-    },
-  });
+  template_params: {
+    to_email: email,
+    full_name: fullName,
+    unique_code: uniqueCode,
+  },
+});
+
 
   console.log(`[Email] Attempting to send email to ${email}`);
 
