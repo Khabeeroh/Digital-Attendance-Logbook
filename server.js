@@ -160,46 +160,40 @@ async function sendEmail(to, subject, text) {
   const email = String(to || '').trim();
   const safeSubject = String(subject || '').trim().slice(0, 200);
   const safeText = String(text || '').trim().slice(0, 5000);
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
     throw new Error('Invalid recipient email address.');
   }
 
-  if (!smtpUser || !smtpPass) {
-    throw new Error('SMTP credentials are missing. Add SMTP_USER and SMTP_PASS to your Render environment variables.');
-  }
-
   const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpPort === 465, // Use SSL for 465, TLS for 587
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-    connectionTimeout: 10000,
-    socketTimeout: 10000,
-  });
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: false, // 587 uses STARTTLS, not SSL
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  requireTLS: true,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+});
 
   await transporter.verify();
-  console.log(`SMTP connection successful to ${smtpHost}:${smtpPort}.`);
+  console.log('SMTP connection successful.');
 
   const info = await transporter.sendMail({
-    from: smtpFrom,
+    from: `"Attendance App" <${process.env.SMTP_USER}>`,
     to: email,
     subject: safeSubject,
     text: safeText,
   });
-
+  
   console.log('EMAIL SENT:', info.messageId);
 
   return info;
+
 }
 
 function toUserRow(row) {
@@ -388,7 +382,6 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
         message: 'User not found.' 
       });
     }
-    
     // Prevent approving an already approved student
     if (user.status === 'approved') {
       return res.status(400).json({
@@ -400,7 +393,7 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
     const uniqueCode = generateCode();
 
     // Update student status and save the new code
-    await run(
+  await run(
       `UPDATE users
       SET status = ?,
         unique_code = ?
@@ -408,37 +401,34 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
       ['approved', uniqueCode, userId],
     );
 
-    console.log('[APPROVAL] Database updated successfully.');
+    console.log('Database updated successfully.');
 
-    // Try to send email, but don't fail if it doesn't work
-    try {
-      await sendEmail(
-        user.email,
-        'Your Attendance Account Has Been Approved',
-        `Hello ${user.full_name},
+    await sendEmail(
+      user.email,
+      'Your Attendance Account Has Been Approved',
+
+      `Hello ${user.full_name},
         
-Your attendance account has been approved.
+      Your attendance account has been approved.
         
-Your access code is: ${uniqueCode}
+      Your access code is: ${uniqueCode}
         
-You can now use this code to sign in.
+      You can now use this code to sign in.
         
-Attendance Team`
-      );
-      console.log('[APPROVAL] Email sent successfully.');
-    } catch (emailError) {
-      console.warn('[APPROVAL] Email failed (user still approved):', emailError.message);
-      // Don't fail the approval just because email failed
-    }
+      Attendance Team`
+
+    );
+   
+ 
+    console.log('Email sent successfully.');
    
     return res.json({ 
-      message: 'User approved successfully.',
-      code: uniqueCode
+      message: 'User approved successfully.' 
     });
   
-  } catch (error) {
+    } catch (error) {
     console.error('=================================');
-    console.error('APPROVAL ERROR:');
+    console.error('APPROVAL/EMAIL ERROR:');
     console.error(error);
     console.error('=================================');
     
@@ -447,7 +437,6 @@ Attendance Team`
       error: error.message
     });
   }
-});
 });
 
 app.post('/api/attendance/signin', async (req, res) => {
