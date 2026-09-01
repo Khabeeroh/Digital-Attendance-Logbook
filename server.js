@@ -13,16 +13,6 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'dev-admin-token-change-me';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@attendance.local').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
 
-// Build allowed origins from environment or use defaults
-const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',').map(o => o.trim()).filter(Boolean);
-const allowedOrigins = [
-  ...corsOrigins,
-  'https://digital-attendance-logbook-production.up.railway.app',
-  'http://digital-attendance-logbook-production.up.railway.app',
-];
-
-console.log('Allowed CORS origins:', allowedOrigins);
-
 if (ADMIN_TOKEN === 'dev-admin-token-change-me') {
   console.warn('WARNING: ADMIN_TOKEN is still using the default development value. Set a strong token in your environment before deployment.');
 }
@@ -31,8 +21,11 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 app.disable('x-powered-by');
 
+// CORS configuration - allow all origins
 app.use(cors({
-  origin: true, // Allow all origins
+  origin: function(origin, callback) {
+    callback(null, true); // Allow all origins
+  },
   credentials: true,
 }));
 
