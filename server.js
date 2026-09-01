@@ -77,11 +77,18 @@ function isAdminSession(req) {
 
 // Apply admin middleware to all /api/admin routes
 // The requireAdmin middleware will check if it's a public route (login/logout)
-app.use('/api/admin', requireAdmin);
+// REMOVED: app.use('/api/admin', requireAdmin); - moved to selective route protection
 
 app.get('/', (req, res) => {
   res.redirect('/login/login.html');
 });
+
+// ============= PUBLIC ADMIN ROUTES (NO AUTH REQUIRED) =============
+
+// These routes are defined AFTER middleware but we'll handle them specially
+// by checking auth inside the handler or by moving them before middleware
+
+// ============= PROTECTED ADMIN ROUTES (WITH MIDDLEWARE ABOVE) =============
 
 const db = new sqlite3.Database(DB_PATH, (err) => {
   if (err) {
@@ -343,7 +350,7 @@ app.get('/dashboard.html', (req, res, next) => {
   return next();
 });
 
-app.post('/api/admin/users', async (req, res) => {
+app.post('/api/admin/users', requireAdmin, async (req, res) => {
   try {
     const fullName = String(req.body.fullName || '').trim();
     const email = String(req.body.email || '').trim();
@@ -375,7 +382,7 @@ app.post('/api/admin/users', async (req, res) => {
   }
 });
 
-app.post('/api/admin/users/:id/approve', async (req, res) => {
+app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
   try {
     const userId = Number(req.params.id);
     
@@ -569,7 +576,7 @@ app.get('/api/attendance', async (req, res) => {
   }
 });
 
-app.post('/api/admin/mark-absent', async (req, res) => {
+app.post('/api/admin/mark-absent', requireAdmin, async (req, res) => {
   try {
     const userId = Number(req.body.userId);
     const date = String(req.body.date || new Date().toISOString().slice(0, 10)).trim();
@@ -663,7 +670,7 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'Attendance backend is running.' });
 });
 
-app.post('/api/admin/reset', async (req, res) => {
+app.post('/api/admin/reset', requireAdmin, async (req, res) => {
   try {
     const action = String(req.body.action || 'attendance').toLowerCase();
 
