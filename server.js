@@ -32,31 +32,7 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 app.disable('x-powered-by');
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Always allow same-origin requests (no origin header)
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-    
-    // In production, also allow requests from Railway domain without strict checking
-    // This handles scenarios where frontend and backend are on the same domain
-    if (origin.includes('railway.app') || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      console.log(`CORS allowed origin: ${origin}`);
-      callback(null, true);
-      return;
-    }
-    
-    // Allow whitelisted origins
-    if (allowedOrigins.includes(origin)) {
-      console.log(`CORS allowed origin: ${origin}`);
-      callback(null, true);
-      return;
-    }
-    
-    console.warn(`CORS REJECTED origin: ${origin}. Allowed list: ${allowedOrigins.join(', ')}`);
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // Allow all origins
   credentials: true,
 }));
 
