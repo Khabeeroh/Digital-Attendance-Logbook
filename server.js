@@ -8,7 +8,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'attendance.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", 'attendance.db');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'dev-admin-token-change-me';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@attendance.local').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
