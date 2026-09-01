@@ -156,103 +156,68 @@ function generateCode() {
   return code;
 }
 
-function sendEmail(to, subject, text) {
-  return new Promise((resolve, reject) => {
-    const email = String(to || '').trim();
-    const safeSubject = String(subject || '').trim().slice(0, 200);
-    const safeText = String(text || '').trim().slice(0, 5000);
+async function sendEmail(to, subject, text, fullName, uniqueCode) {
+  const email = String(to || '').trim();
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailPattern.test(email)) {
-      return reject(new Error('Invalid recipient email address.'));
-    }
+  if (!emailPattern.test(email)) {
+    throw new Error('Invalid recipient email address.');
+  }
 
-    if (!process.env.BREVO_API_KEY) {
-      return reject(new Error('BREVO_API_KEY is not configured.'));
-    }
+  if (!process.env.EMAILJS_SERVICE_ID) {
+    throw new Error('EMAILJS_SERVICE_ID is not configured.');
+  }
 
-    if (!process.env.BREVO_SENDER_EMAIL) {
-      return reject(new Error('BREVO_SENDER_EMAIL is not configured.'));
-    }
+  if (!process.env.EMAILJS_TEMPLATE_ID) {
+    throw new Error('EMAILJS_TEMPLATE_ID is not configured.');
+  }
 
-    const requestData = JSON.stringify({
-      sender: {
-        name: process.env.BREVO_SENDER_NAME || 'Attendance App',
-        email: process.env.BREVO_SENDER_EMAIL,
-      },
-      to: [
-        {
-          email: email,
-        },
-      ],
-      subject: safeSubject,
-      textContent: safeText,
-    });
+  if (!process.env.EMAILJS_PUBLIC_KEY) {
+    throw new Error('EMAILJS_PUBLIC_KEY is not configured.');
+  }
 
-    const options = {
-      hostname: 'api.brevo.com',
-      path: '/v3/smtp/email',
+  const requestData = JSON.stringify({
+    service_id: process.env.EMAILJS_SERVICE_ID,
+    template_id: process.env.EMAILJS_TEMPLATE_ID,
+    user_id: process.env.EMAILJS_PUBLIC_KEY,
+
+    template_params: {
+      to_email: email,
+      full_name: fullName,
+      unique_code: uniqueCode,
+    },
+  });
+
+  console.log(`[Email] Attempting to send email to ${email}`);
+
+  const response = await fetch(
+    'https://api.emailjs.com/api/v1.0/email/send',
+    {
       method: 'POST',
       headers: {
-        'accept': 'application/json',
-        'api-key': process.env.BREVO_API_KEY,
-        'content-type': 'application/json',
-        'content-length': Buffer.byteLength(requestData),
+        'Content-Type': 'application/json',
       },
-    };
+      body: requestData,
+    }
+  );
 
-    console.log(`[Email] Attempting to send email to ${email}`);
+  const responseText = await response.text();
 
-    const request = https.request(options, (response) => {
-      let responseData = '';
-
-      response.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      response.on('end', () => {
-        let parsedData = {};
-
-        try {
-          parsedData = responseData ? JSON.parse(responseData) : {};
-        } catch {
-          parsedData = { raw: responseData };
-        }
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          console.log('[Email] ✓ Brevo email sent successfully.');
-          console.log('[Email] Message ID:', parsedData.messageId);
-
-          return resolve(parsedData);
-        }
-
-        console.error('[Email] Brevo API error:', {
-          statusCode: response.statusCode,
-          response: parsedData,
-        });
-
-        const errorMessage =
-          parsedData.message ||
-          `Brevo API returned status ${response.statusCode}.`;
-
-        return reject(new Error(errorMessage));
-      });
+  if (!response.ok) {
+    console.error('[EmailJS] API error:', {
+      statusCode: response.status,
+      response: responseText,
     });
 
-    request.on('error', (error) => {
-      console.error('[Email] Brevo connection error:', error);
-      reject(error);
-    });
+    throw new Error(
+      `EmailJS error (${response.status}): ${responseText}`
+    );
+  }
 
-    request.setTimeout(30000, () => {
-      request.destroy();
-      reject(new Error('Brevo API connection timeout.'));
-    });
+  console.log('[Email] ✓ EmailJS email sent successfully.');
 
-    request.write(requestData);
-    request.end();
-  });
+  return responseText;
 }
 
 function toUserRow(row) {
@@ -460,22 +425,20 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
       ['approved', uniqueCode, userId],
     );
 
-    console.log('Database updated successfully.');
+await sendEmail(
+  user.email,
+  'Your Attendance Account Has Been Approved',
+  `Hello ${user.full_name},
 
-    await sendEmail(
-      user.email,
-      'Your Attendance Account Has Been Approved',
+    Your attendance account has been approved.
 
-      `Hello ${user.full_name},
-        
-      Your attendance account has been approved.
-        
-      Your access code is: ${uniqueCode}
-        
-      You can now use this code to sign in.
-        
-      Attendance Team`
+    Your access code is: ${uniqueCode}
 
+    You can now use this code to sign in.
+
+    Attendance Team`,
+      user.full_name,
+      uniqueCode
     );
    
  
