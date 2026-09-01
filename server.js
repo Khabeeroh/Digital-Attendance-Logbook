@@ -13,6 +13,13 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'dev-admin-token-change-me';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@attendance.local').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
 
+// Build allowed origins from environment or use defaults
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',').map(o => o.trim()).filter(Boolean);
+const allowedOrigins = [
+  ...corsOrigins,
+  'https://digital-attendance-logbook-production.up.railway.app'
+];
+
 if (ADMIN_TOKEN === 'dev-admin-token-change-me') {
   console.warn('WARNING: ADMIN_TOKEN is still using the default development value. Set a strong token in your environment before deployment.');
 }
@@ -21,24 +28,21 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 app.disable('x-powered-by');
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://digital-attendance-logbook-production.up.railway.app'
-];
-
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow same-origin requests (no origin header) - common in production
-    // Allow localhost for development
-    // Allow configured CORS_ORIGINS for additional origins
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (same-domain requests, common in production)
+    if (!origin) {
       callback(null, true);
       return;
     }
-    // In production (Railway), requests from the same domain have no origin
-    // so they're already allowed above. Log CORS rejections for debugging.
-    console.warn(`CORS rejected origin: ${origin}`);
+    
+    // Allow whitelisted origins
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    
+    console.warn(`CORS rejected origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
