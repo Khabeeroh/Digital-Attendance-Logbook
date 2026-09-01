@@ -1,0 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    /* font-style: italic; */
+}
+
+body {
+    background: #f5f8fc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+}
+
+/* Main container */
+.container {
+    width: 100%;
+    max-width: 360px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo h1 {
+    color: #092b66;
+    font-size: 18px;
+}
+
+.logo h1 span {
+    color: #3b82f6;
+}
+
+.shield {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.shield img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.profile {
+    font-size: 24px;
+    color: #0f172a;
+}
+
+/* Tabs */
+.tabs {
+    height: auto;
+    display: flex;
+    position: relative;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tab {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tab a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    width: 100%;
+    padding: 14px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.tab.active a {
+    color: #3b82f6;
+}
+
+.tab.active {
+    border-bottom: 3px solid #071d44;
+}
+
+/* Main */
+main {
+    padding: 28px 24px;
+    text-align: center;
+}
+
+/* Welcome icon */
+.welcome-icon {
+    width: 72px;
+    height: 72px;
+    background: #f2f7ff;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #3b82f6;
+    font-size: 32px;
+}
+
+h2 {
+    color: #0f172a;
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    color: #7c8490;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+/* Input */
+.input-group {
+    border: 1px solid #dce5f0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    text-align: left;
+    transition: 0.3s;
+}
+
+.input-group:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(8, 124, 255, 0.1);
+}
+
+.input-group label {
+    color: #3b82f6;
+    font-size: 18px;
+    width: 32px;
+    text-align: center;
+}
+
+.input-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-content span {
+    color: #1d2940;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.input-content input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #333;
+    width: 100%;
+    cursor: text;
+}
+
+.input-content select {
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 2px 0;
+    background: transparent;
+    color: #a8adb5;
+    font: inherit;
+    cursor: pointer;
+}
+
+.input-content select:valid {
+    color: #333;
+}
+
+.input-content select option {
+    color: #333;
+    background: #fff;
+}
+
+.input-content input::placeholder {
+    color: #a8adb5;
+}
+
+/* Password */
+.password-title {
+    text-align: left;
+    font-weight: bold;
+    color: #16223a;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.eye {
+    color: #687486;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Button */
+.signin-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #087cff, #075ddd);
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 7px 15px rgba(8, 100, 220, 0.25);
+    transition: 0.3s;
+}
+
+.signin-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(8, 100, 220, 0.35);
+}
+
+/* Bottom text */
+.bottom-text {
+    margin-top: 18px;
+    color: #3b82f6;
+    font-size: 13px;
+}
+
+.bottom-text a {
+    color: #3b82f6;
+    font-weight: bold;
+    text-decoration: none;
+    margin-left: 5px;
+}
+
+/* Custom Dropdown */
+.custom-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    background: rgba(19, 30, 62, 0.94);
+    border: 1px solid rgba(161, 125, 255, 0.6);
+    border-radius: 12px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    padding: 6px 0;
+}
+
+.custom-dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.custom-dropdown-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    color: #dfe8ff;
+    font-size: 14px;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 8px;
+    margin: 0 6px;
+}
+
+.custom-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+.dropdown-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #c2c8ff;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.dropdown-icon.rotate-up {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.input-group {
+    position: relative;
+    cursor: pointer;
+}
+
+.input-group input {
+    cursor: text;
+}
+
+/* Mobile */
+@media screen and (max-width: 720px) {
+    body {
+        align-items: flex-start;
+        padding: 0;
+    }
+
+    .container {
+        width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    main {
+        padding: 28px 24px;
+    }
+
+    header {
+        padding: 16px 24px;
+    }
+}

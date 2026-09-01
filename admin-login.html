@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 32%),
+                        linear-gradient(135deg, #050f24 0%, #0b1d3b 35%, #0d2341 100%);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            color: #f5f7ff;
+            padding: 24px;
+        }
+
+        .admin-shell {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .brand-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            color: #eef3ff;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 10px 18px rgba(59, 130, 246, 0.32);
+            font-size: 18px;
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .brand-title small {
+            display: block;
+            opacity: 0.75;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .admin-card {
+            background: rgba(15, 31, 58, 0.82);
+            border: 1px solid rgba(129, 169, 255, 0.25);
+            border-radius: 22px;
+            padding: 28px 24px 22px;
+            box-shadow: 0 10px 36px rgba(2, 12, 35, 0.38);
+            backdrop-filter: blur(6px);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            font-size: 13px;
+            opacity: 0.8;
+            color: #dfe8ff;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin: 0 0 8px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: #dfe8ff;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid rgba(121, 176, 255, 0.35);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #f8faff;
+            padding: 13px 14px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s ease;
+        }
+
+        input::placeholder {
+            color: rgba(220, 227, 255, 0.5);
+        }
+
+        input:focus {
+            border-color: rgba(96, 165, 250, 0.8);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 16px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.32);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.36);
+        }
+
+        .message {
+            margin-top: 18px;
+            min-height: 22px;
+            text-align: center;
+            font-size: 14px;
+            color: #ffcaca;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #dfe8ff;
+            text-decoration: none;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 520px) {
+            .admin-card {
+                padding: 22px 18px 18px;
+            }
+
+            .card-header h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-shell">
+        <div class="brand-top">
+            <div class="brand-mark">◉</div>
+            <div class="brand-title">
+                AuthFlow
+                <small>Attendance Check-In</small>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="card-header">
+                <h1>Admin Login</h1>
+                <div class="subtitle">Secure access to the attendance dashboard</div>
+            </div>
+
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminEmail">Email</label>
+                    <input id="adminEmail" type="email" name="email" placeholder="admin@attendance.local" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input id="adminPassword" type="password" name="password" placeholder="Enter admin password" required />
+                </div>
+
+                <button type="submit">Login</button>
+                <p id="adminMessage" class="message"></p>
+            </form>
+
+            <a class="back-link" href="/login/login.html">Back to attendance</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('adminLoginForm');
+        const message = document.getElementById('adminMessage');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+
+            try {
+                message.textContent = 'Signing in...';
+                message.style.color = '#dfe8ff';
+
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Admin login failed.');
+                }
+
+                window.location.href = data.redirectUrl || '/dashboard.html';
+            } catch (error) {
+                message.textContent = error.message;
+                message.style.color = '#ffcaca';
+            }
+        });
+    </script>
+</body>
+</html>

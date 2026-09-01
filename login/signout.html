@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthFlow Attendance</title>
+    <link rel="stylesheet" href="/login/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shield">
+                    <img src="/attendance.jpg" alt="Logo">
+                </div>
+                <h1>Auth<span>Flow</span></h1>
+            </div>
+
+            <div class="profile">
+                <i class="fa-regular fa-circle-user"></i>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <div class="tab">
+                <a href="/login/login.html">SIGN IN</a>
+            </div>
+            <div class="tab active">
+                <a href="/login/signout.html">SIGN OUT</a>
+            </div>
+        </div>
+
+        <main>
+            <div class="welcome-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+
+            <h2>Sign out</h2>
+            <p class="subtitle">Enter your full name and code to end your attendance session.</p>
+
+            <form id="signOutForm" action="">
+                <div class="input-group">
+                    <label><i class="fa-regular fa-user"></i></label>
+                    <div class="input-content">
+                        <span>Full Name</span>
+                        <input type="text" id="signOutName" placeholder="Type to search your name" autocomplete="off" required>
+                    </div>
+                </div>
+
+                <div class="password-title">Access Code</div>
+                <div class="input-group">
+                    <label><i class="fa-solid fa-lock"></i></label>
+                    <div class="input-content">
+                        <input type="password" id="signOutCode" placeholder="Enter your access code" required>
+                    </div>
+                    <i class="fa-regular fa-eye-slash eye" onclick="togglePassword()"></i>
+                </div>
+
+                <button type="submit" class="signin-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    SIGN OUT
+                </button>
+
+                <p id="signOutMessage" class="bottom-text"></p>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const password = document.getElementById("signOutCode");
+            const eyeIcon = document.querySelector(".eye");
+            if (password.type === "password") {
+                password.type = "text";
+                eyeIcon.classList.remove("fa-eye-slash");
+                eyeIcon.classList.add("fa-eye");
+            } else {
+                password.type = "password";
+                eyeIcon.classList.remove("fa-eye");
+                eyeIcon.classList.add("fa-eye-slash");
+            }
+        }
+    </script>
+    <script src="/login/registry.js"></script>
+    <script src="/login/index.js"></script>
+</body>
+</html>

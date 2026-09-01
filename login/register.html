@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | AuthFlow</title>
+    <link rel="stylesheet" href="/login/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shield">
+                    <img src="/attendance.jpg" alt="Logo">
+                </div>
+                <h1>Auth<span>Flow</span></h1>
+            </div>
+            <div class="profile">
+                <i class="fa-regular fa-circle-user"></i>
+            </div>
+        </header>
+
+        <main>
+            <div class="welcome-icon">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2>Register</h2>
+            <p class="subtitle">Create your account and wait for admin approval.</p>
+
+            <form id="registerForm">
+                <div class="input-group">
+                    <label><i class="fa-regular fa-user"></i></label>
+                    <div class="input-content">
+                        <span>Full Name</span>
+                        <input type="text" id="registerFullName" placeholder="Enter your full name" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-regular fa-envelope"></i></label>
+                    <div class="input-content">
+                        <span>Email</span>
+                        <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="signin-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    REGISTER
+                </button>
+
+                <p class="bottom-text">
+                    Already have an account?
+                    <a href="/login/login.html">Sign in <i class="fa-solid fa-arrow-right"></i></a>
+                </p>
+
+                <p id="registerMessage" class="bottom-text"></p>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        const registerMessage = document.getElementById('registerMessage');
+        const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const fullName = document.getElementById('registerFullName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+
+            try {
+                const response = await fetch(`${apiBase}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, email })
+                });
+
+                const responseText = await response.text();
+                const data = responseText ? JSON.parse(responseText) : {};
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Registration failed.');
+                }
+
+                registerMessage.textContent = data.message || 'Registration successful.';
+                registerMessage.style.color = '#16a34a';
+                registerForm.reset();
+            } catch (error) {
+                const message = error.message || 'Unable to connect to the server. Please start the app with npm start and open it from http://localhost:3000.';
+                registerMessage.textContent = message;
+                registerMessage.style.color = '#dc2626';
+            }
+        });
+    </script>
+</body>
+</html>

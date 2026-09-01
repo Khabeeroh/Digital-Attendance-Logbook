@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance System — Signed In</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="alert.css" />
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="header-title">
+        <img src="attendance.jpg" alt="attendance logo">Auth<span>Flow</span>
+      </div>
+      <div class="header-icon">
+        <i class="fa-regular fa-user"></i>
+      </div>
+    </div>
+
+
+    <div class="content">
+      <div class="checkmark-wrap">
+        <div class="ray top"></div>
+        <div class="ray bottom"></div>
+        <div class="ray left"></div>
+        <div class="ray right"></div>
+        <div class="ray tl"></div>
+        <div class="ray tr"></div>
+        <div class="ray bl"></div>
+        <div class="ray br"></div>
+        <div class="checkmark-circle">
+          <i class="fa-solid fa-check"></i>
+        </div>
+      </div>
+
+      <h2 class="content-title">You're Signed In!</h2>
+      <p class="sub">You have successfully signed in.</p>
+
+      <div class="info-card">
+        <div class="info-row">
+          <div class="info-icon">
+            <i class="fa-regular fa-user"></i>
+          </div>
+          <div>
+            <div class="info-label">Name</div>
+            <div class="info-value" id="userName"></div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">
+            <i class="fa-regular fa-clock"></i>
+          </div>
+          <div>
+            <div class="info-label">Sign-in Time</div>
+            <div class="info-value" id="signInTime"></div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">
+            <i class="fa-regular fa-calendar"></i>
+          </div>
+          <div>
+            <div class="info-label">Date</div>
+            <div class="info-value" id="attendanceDate"></div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn" onclick="window.location.href='login/signout.html'">
+        <i class="fa-solid fa-arrow-left"></i>
+        BACK TO ATTENDANCE
+      </button>
+    </div>
+  </div>
+  <script src="login/index.js"></script>
+</body>
+</html>

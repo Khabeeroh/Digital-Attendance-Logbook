@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="brand-box">
+                <div class="brand-mark">
+                    <img src="attendance.jpg" alt="attendance logo">
+                </div>
+                <div>
+                    <h1>Attendance <span>System</span></h1>
+                    <p>Admin dashboard</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu" aria-label="Sidebar navigation">
+                <button class="nav-item active" type="button">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-user-check"></i>
+                    <span>Users</span>
+                </button>
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Attendance records</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a class="back-link" href="/login/login.html">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Return to attendance
+                </a>
+            </div>
+        </aside>
+
+        <main class="dashboard-shell">
+            <header class="dashboard-header">
+                <div>
+                    <p class="eyebrow">Dashboard</p>
+                    <h2>Welcome back, Admin <span aria-hidden="true">&#128075;</span></h2>
+                </div>
+                <label class="date-filter" for="dateFilter">
+                        <span>Choose date</span>
+                    <input type="date" id="dateFilter">
+                </label>
+            </header>
+
+            <section class="summary-grid" aria-label="Attendance metrics">
+                <article class="summary-card">
+                    <div class="summary-icon blue"><i class="fa-regular fa-calendar"></i></div>
+                    <div><span>Total days</span><strong id="totalDays">0</strong></div>
+                </article>
+                <article class="summary-card">
+                    <div class="summary-icon green"><i class="fa-regular fa-user"></i></div>
+                    <div><span>Total records</span><strong id="totalRecords">0</strong></div>
+                </article>
+                <article class="summary-card">
+                    <div class="summary-icon amber"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+                    <div><span>Signed out</span><strong id="totalSignedOut">0</strong></div>
+                </article>
+                <article class="summary-card">
+                    <div class="summary-icon red"><i class="fa-solid fa-circle-xmark"></i></div>
+                    <div><span>Absent</span><strong id="totalAbsent">0</strong></div>
+                </article>
+            </section>
+
+            <section class="view-section active" id="overviewSection">
+                <div class="section-intro">
+                    <div>
+                        <p class="eyebrow">Live register</p>
+                        <h3>Recent attendance records</h3>
+                    </div>
+                </div>
+
+                <section class="records-panel">
+                    <div class="records-heading">
+                        <div>
+                            <h3>Attendance register</h3>
+                            <p id="recordCount">0 records</p>
+                        </div>
+                        <button type="button" class="refresh-button" id="refreshButton" title="Refresh attendance records">
+                            <i class="fa-solid fa-rotate-right"></i>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Student name</th>
+                                    <th>Sign-in time</th>
+                                    <th>Sign-out time</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody"></tbody>
+                        </table>
+                        <p class="empty-state" id="emptyState">No attendance records found.</p>
+                    </div>
+                </section>
+            </section>
+
+            <section class="view-section" id="approvalsSection">
+                <div class="section-intro">
+                    <div>
+                        <p class="eyebrow">Approvals</p>
+                        <h3>Registration approval center</h3>
+                    </div>
+                </div>
+
+                <section class="admin-panel">
+                    <div class="panel-column">
+                        <h3>Pending approvals</h3>
+                        <div id="pendingUsersList" class="pending-users-list"></div>
+                    </div>
+
+                    <div class="panel-column">
+                        <h3>Add student manually</h3>
+                        <form id="manualStudentForm" class="manual-student-form">
+                            <input type="text" id="manualFullName" placeholder="Full name" required>
+                            <input type="email" id="manualEmail" placeholder="Email" required>
+                            <input type="text" id="manualCode" placeholder="Access code (optional)">
+                            <button type="submit">Add student</button>
+                        </form>
+                        <p id="manualStudentMessage" class="status-message"></p>
+                    </div>
+
+                    <button type="button" id="exportButton" class="export-button">
+                        <i class="fa-solid fa-download"></i>
+                        Export selected day
+                    </button>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <script src="/dashboard.js"></script>
+</body>
+</html>
