@@ -1,5 +1,4 @@
 require('dotenv').config();
-// const cors = require('cors');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -168,17 +167,18 @@ async function sendEmail(to, subject, text) {
   }
 
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-  });
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: false, // 587 uses STARTTLS, not SSL
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  requireTLS: true,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+});
 
   await transporter.verify();
   console.log('SMTP connection successful.');
