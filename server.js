@@ -1,4 +1,5 @@
 require('dotenv').config();
+// const cors = require('cors');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -20,30 +21,18 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 app.disable('x-powered-by');
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://digital-attendance-logbook-production.up.railway.app'
-];
+// const allowedOrigins = [
+//   'http://localhost:3000',
+//   'http://127.0.0.1:3000',
+//   'https://digital-attendance-logbook-production.up.railway.app'
+// ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    console.log('CORS rejected origin:', origin);
-    return callback(new Error('Not allowed by CORS'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
-  credentials: true
-}));
+//   app.use(cors({
+//   origin: allowedOrigins,
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token']
+// }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
