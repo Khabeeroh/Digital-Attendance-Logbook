@@ -388,6 +388,7 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
         message: 'User not found.' 
       });
     }
+    
     // Prevent approving an already approved student
     if (user.status === 'approved') {
       return res.status(400).json({
@@ -399,7 +400,7 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
     const uniqueCode = generateCode();
 
     // Update student status and save the new code
-  await run(
+    await run(
       `UPDATE users
       SET status = ?,
         unique_code = ?
@@ -407,34 +408,37 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
       ['approved', uniqueCode, userId],
     );
 
-    console.log('Database updated successfully.');
+    console.log('[APPROVAL] Database updated successfully.');
 
-    await sendEmail(
-      user.email,
-      'Your Attendance Account Has Been Approved',
-
-      `Hello ${user.full_name},
+    // Try to send email, but don't fail if it doesn't work
+    try {
+      await sendEmail(
+        user.email,
+        'Your Attendance Account Has Been Approved',
+        `Hello ${user.full_name},
         
-      Your attendance account has been approved.
+Your attendance account has been approved.
         
-      Your access code is: ${uniqueCode}
+Your access code is: ${uniqueCode}
         
-      You can now use this code to sign in.
+You can now use this code to sign in.
         
-      Attendance Team`
-
-    );
-   
- 
-    console.log('Email sent successfully.');
+Attendance Team`
+      );
+      console.log('[APPROVAL] Email sent successfully.');
+    } catch (emailError) {
+      console.warn('[APPROVAL] Email failed (user still approved):', emailError.message);
+      // Don't fail the approval just because email failed
+    }
    
     return res.json({ 
-      message: 'User approved successfully.' 
+      message: 'User approved successfully.',
+      code: uniqueCode
     });
   
-    } catch (error) {
+  } catch (error) {
     console.error('=================================');
-    console.error('APPROVAL/EMAIL ERROR:');
+    console.error('APPROVAL ERROR:');
     console.error(error);
     console.error('=================================');
     
@@ -443,6 +447,7 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
       error: error.message
     });
   }
+});
 });
 
 app.post('/api/attendance/signin', async (req, res) => {
