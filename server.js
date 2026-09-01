@@ -40,40 +40,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const requireAdmin = (req, res, next) => {
-  // Debug: log the request
-  console.log(`[Admin Middleware] ${req.method} ${req.originalUrl} - path: ${req.path}, baseUrl: ${req.baseUrl}`);
-  
-  // Public routes that don't require authentication
-  // Check both absolute and relative paths
-  const pathToCheck = req.path.startsWith('/api') ? req.path : `/api/admin${req.path}`;
-  if (pathToCheck.includes('/login') || pathToCheck.includes('/logout')) {
-    console.log(`[Admin Auth] ✓ Allowing public route: ${pathToCheck}`);
-    return next();
-  }
-
-  const cookieAllowsSession = isAdminSession(req);
+  // Token-based auth only
   const providedToken = req.headers['x-admin-token'] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
 
-  if (cookieAllowsSession || (providedToken && providedToken === ADMIN_TOKEN)) {
-    console.log(`[Admin Auth] ✓ Allowing protected route: ${pathToCheck}`);
+  if (providedToken && providedToken === ADMIN_TOKEN) {
+    console.log(`[Admin Auth] ✓ Token valid - allowing access to ${req.path}`);
     return next();
   }
 
-  console.log(`[Admin Auth] ✗ REJECTING unauthorized access to: ${pathToCheck}`);
-  return res.status(403).json({ message: 'Admin authorization required.' });
+  console.log(`[Admin Auth] ✗ Invalid/missing token for ${req.path}`);
+  return res.status(403).json({ message: 'Admin authorization required. Use x-admin-token or Authorization: Bearer <token> header.' });
 };
 
-function isAdminSession(req) {
-  const cookieHeader = req.headers.cookie || '';
-  const cookies = Object.fromEntries(
-    cookieHeader.split(';').filter(Boolean).map((part) => {
-      const [key, ...valueParts] = part.trim().split('=');
-      return [key, valueParts.join('=')];
-    }),
-  );
-
-  return cookies.adminAuth === 'logged-in';
-}
+// Token-based authentication - session cookies removed
 
 // Apply admin middleware to all /api/admin routes
 // The requireAdmin middleware will check if it's a public route (login/logout)
@@ -311,44 +290,8 @@ app.get('/api/pending-users', async (req, res) => {
     res.status(500).json({ message: 'Unable to load pending users.' });
   }
 });
-app.post('/api/admin/login', (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase();
-  const password = String(req.body.password || '').trim();
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
-  }
-
-  if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ message: 'Invalid admin credentials.' });
-  }
-
-  res.cookie('adminAuth', 'logged-in', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: false,
-    maxAge: 60 * 60 * 1000,
-    path: '/',
-  });
-
-  return res.json({
-    success: true,
-    message: 'Admin login successful.',
-    redirectUrl: '/dashboard.html',
-  });
-});
-
-app.post('/api/admin/logout', (req, res) => {
-  res.clearCookie('adminAuth', { path: '/' });
-  return res.json({ success: true, message: 'Logged out successfully.' });
-});
-
-app.get('/dashboard.html', (req, res, next) => {
-  if (!isAdminSession(req)) {
-    return res.redirect('/admin-login.html');
-  }
-  return next();
-});
+// Token-based authentication only - no login/logout routes
+// Use x-admin-token header or Authorization: Bearer <token>
 
 app.post('/api/admin/users', requireAdmin, async (req, res) => {
   try {
