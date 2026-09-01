@@ -24,10 +24,16 @@ app.disable('x-powered-by');
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow same-origin requests (no origin header) - common in production
+    // Allow localhost for development
+    // Allow configured CORS_ORIGINS for additional origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
       return;
     }
+    // In production (Railway), requests from the same domain have no origin
+    // so they're already allowed above. Log CORS rejections for debugging.
+    console.warn(`CORS rejected origin: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
