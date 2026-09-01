@@ -39,24 +39,35 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const requireAdmin = (req, res, next) => {
-  // Token-based auth only
-  const providedToken = req.headers['x-admin-token'] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
+// ============= HELPER FUNCTIONS =============
 
-  if (providedToken && providedToken === ADMIN_TOKEN) {
-    console.log(`[Admin Auth] ✓ Token valid - allowing access to ${req.path}`);
+// Check admin session from cookie
+function isAdminSession(req) {
+  const cookieHeader = req.headers.cookie || '';
+  const cookies = Object.fromEntries(
+    cookieHeader.split(';').filter(Boolean).map((part) => {
+      const [key, ...valueParts] = part.trim().split('=');
+      return [key, valueParts.join('=')];
+    }),
+  );
+
+  return cookies.adminAuth === 'logged-in';
+}
+
+// ============= MIDDLEWARE =============
+
+const requireAdmin = (req, res, next) => {
+  // Check if user has valid session cookie
+  if (isAdminSession(req)) {
+    console.log(`[Admin Auth] ✓ Valid session - allowing access to ${req.path}`);
     return next();
   }
 
-  console.log(`[Admin Auth] ✗ Invalid/missing token for ${req.path}`);
-  return res.status(403).json({ message: 'Admin authorization required. Use x-admin-token or Authorization: Bearer <token> header.' });
+  console.log(`[Admin Auth] ✗ No valid session for ${req.path}`);
+  return res.status(403).json({ message: 'Admin authorization required. Please login first.' });
 };
 
-// Token-based authentication - session cookies removed
-
-// Apply admin middleware to all /api/admin routes
-// The requireAdmin middleware will check if it's a public route (login/logout)
-// REMOVED: app.use('/api/admin', requireAdmin); - moved to selective route protection
+// ============= ROUTES =============
 
 app.get('/', (req, res) => {
   res.redirect('/login/login.html');
@@ -64,8 +75,47 @@ app.get('/', (req, res) => {
 
 // ============= PUBLIC ADMIN ROUTES (NO AUTH REQUIRED) =============
 
-// These routes are defined AFTER middleware but we'll handle them specially
-// by checking auth inside the handler or by moving them before middleware
+// Admin login - just check password
+app.post('/api/admin/login', (req, res) => {
+  const password = String(req.body.password || '').trim();
+
+  if (!password) {
+    return res.status(400).json({ message: 'Password is required.' });
+  }
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ message: 'Invalid password.' });
+  }
+
+  // Password is correct - set session cookie
+  res.cookie('adminAuth', 'logged-in', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false,
+    maxAge: 60 * 60 * 1000,
+    path: '/',
+  });
+
+  return res.json({
+    success: true,
+    message: 'Admin login successful.',
+    redirectUrl: '/dashboard.html',
+  });
+});
+
+// Admin logout
+app.post('/api/admin/logout', (req, res) => {
+  res.clearCookie('adminAuth', { path: '/' });
+  return res.json({ success: true, message: 'Logged out successfully.' });
+})
+
+// Dashboard requires session
+app.get('/dashboard.html', (req, res, next) => {
+  if (!isAdminSession(req)) {
+    return res.redirect('/admin-login.html');
+  }
+  return next();
+});
 
 // ============= PROTECTED ADMIN ROUTES (WITH MIDDLEWARE ABOVE) =============
 

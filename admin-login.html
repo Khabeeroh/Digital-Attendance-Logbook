@@ -199,11 +199,6 @@
 
             <form id="adminLoginForm">
                 <div class="form-group">
-                    <label for="adminEmail">Email</label>
-                    <input id="adminEmail" type="email" name="email" placeholder="admin@attendance.local" required />
-                </div>
-
-                <div class="form-group">
                     <label for="adminPassword">Password</label>
                     <input id="adminPassword" type="password" name="password" placeholder="Enter admin password" required />
                 </div>
@@ -222,7 +217,6 @@
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value.trim();
 
             try {
@@ -234,7 +228,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ password })
                 });
 
                 const data = await response.json();
