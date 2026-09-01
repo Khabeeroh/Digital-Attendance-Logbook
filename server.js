@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer');
+const brevo = require('@getbrevo/brevo');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
@@ -162,39 +162,62 @@ async function sendEmail(to, subject, text) {
   const safeText = String(text || '').trim().slice(0, 5000);
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   if (!emailPattern.test(email)) {
     throw new Error('Invalid recipient email address.');
   }
 
-  const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT || 465),
-  secure: true, // 587 uses STARTTLS, not SSL
-  family: 4,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  requireTLS: true,
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-});
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY is not configured.');
+  }
 
-  await transporter.verify();
-  console.log('SMTP connection successful.');
+  if (!process.env.BREVO_SENDER_EMAIL) {
+    throw new Error('BREVO_SENDER_EMAIL is not configured.');
+  }
 
-  const info = await transporter.sendMail({
-    from: `"Attendance App" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: safeSubject,
-    text: safeText,
-  });
-  
-  console.log('EMAIL SENT:', info.messageId);
+  const apiInstance = new brevo.TransactionalEmailsApi();
 
-  return info;
+  apiInstance.setApiKey(
+    brevo.TransactionalEmailsApiApiKeys.apiKey,
+    process.env.BREVO_API_KEY
+  );
 
+  const sendSmtpEmail = new brevo.SendSmtpEmail();
+
+  sendSmtpEmail.subject = safeSubject;
+  sendSmtpEmail.textContent = safeText;
+
+  sendSmtpEmail.sender = {
+    name: process.env.BREVO_SENDER_NAME || 'Attendance App',
+    email: process.env.BREVO_SENDER_EMAIL,
+  };
+
+  sendSmtpEmail.to = [
+    {
+      email: email,
+    },
+  ];
+
+  console.log(`[Email] Attempting to send email to ${email}`);
+
+  try {
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+    console.log('[Email] ✓ Brevo email sent successfully.');
+    console.log('[Email] Message ID:', result.body?.messageId || result.messageId);
+
+    return result;
+  } catch (error) {
+    console.error('[Email] Brevo error:');
+
+    if (error.response?.body) {
+      console.error(error.response.body);
+    } else {
+      console.error(error.message || error);
+    }
+
+    throw error;
+  }
 }
 
 function toUserRow(row) {
