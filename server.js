@@ -71,6 +71,10 @@ function isAdminSession(req) {
   return cookies.adminAuth === 'logged-in';
 }
 
+// Apply admin middleware to all /api/admin routes
+// The requireAdmin middleware will check if it's a public route (login/logout)
+app.use('/api/admin', requireAdmin);
+
 app.get('/', (req, res) => {
   res.redirect('/login/login.html');
 });
@@ -334,9 +338,6 @@ app.get('/dashboard.html', (req, res, next) => {
   }
   return next();
 });
-
-// Apply admin middleware AFTER public login/logout routes
-app.use('/api/admin', requireAdmin);
 
 app.post('/api/admin/users', async (req, res) => {
   try {
