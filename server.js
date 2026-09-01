@@ -21,19 +21,6 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 app.disable('x-powered-by');
 
-// const allowedOrigins = [
-//   'http://localhost:3000',
-//   'http://127.0.0.1:3000',
-//   'https://digital-attendance-logbook-production.up.railway.app'
-// ];
-
-//   app.use(cors({
-//   origin: allowedOrigins,
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token']
-// }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -182,7 +169,7 @@ async function sendEmail(to, subject, text) {
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
+    port: 587,
     secure: true,
     auth: {
       user: process.env.SMTP_USER,
