@@ -7,12 +7,11 @@ const nodemailer = require('nodemailer');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", 'attendance.db');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'dev-admin-token-change-me';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@attendance.local').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',').map((origin) => origin.trim()).filter(Boolean);
 
 if (ADMIN_TOKEN === 'dev-admin-token-change-me') {
   console.warn('WARNING: ADMIN_TOKEN is still using the default development value. Set a strong token in your environment before deployment.');
@@ -21,6 +20,12 @@ if (ADMIN_TOKEN === 'dev-admin-token-change-me') {
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 app.disable('x-powered-by');
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://digital-attendance-logbook-production.up.railway.app'
+];
 
 app.use(cors({
   origin: (origin, callback) => {
