@@ -170,6 +170,7 @@ async function sendEmail(to, subject, text) {
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT || 587),
   secure: false, // 587 uses STARTTLS, not SSL
+  family: 4,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
