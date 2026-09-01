@@ -183,12 +183,17 @@ async function sendEmail(to, subject, text) {
   await transporter.verify();
   console.log('SMTP connection successful.');
 
-  return transporter.sendMail({
+  const info = await transporter.sendMail({
     from: `"Attendance App" <${process.env.SMTP_USER}>`,
     to: email,
     subject: safeSubject,
     text: safeText,
   });
+  
+  console.log('EMAIL SENT:', info.messageId);
+
+  return info;
+
 }
 
 function toUserRow(row) {
