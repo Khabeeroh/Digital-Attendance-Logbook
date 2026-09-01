@@ -37,6 +37,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const requireAdmin = (req, res, next) => {
+  // Public routes that don't require authentication
+  if (req.path === '/api/admin/login' || req.path === '/api/admin/logout') {
+    return next();
+  }
+
   const cookieAllowsSession = isAdminSession(req);
   const providedToken = req.headers['x-admin-token'] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
 
@@ -323,6 +328,7 @@ app.get('/dashboard.html', (req, res, next) => {
   return next();
 });
 
+// Apply admin middleware AFTER public login/logout routes
 app.use('/api/admin', requireAdmin);
 
 app.post('/api/admin/users', async (req, res) => {
