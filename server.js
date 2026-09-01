@@ -161,39 +161,48 @@ async function sendEmail(to, subject, text) {
   const email = String(to || '').trim();
   const safeSubject = String(subject || '').trim().slice(0, 200);
   const safeText = String(text || '').trim().slice(0, 5000);
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const smtpFrom = process.env.SMTP_FROM || smtpUser;
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
     throw new Error('Invalid recipient email address.');
   }
 
+  if (!smtpUser || !smtpPass) {
+    throw new Error('SMTP credentials are missing. Add SMTP_USER and SMTP_PASS to your Render environment variables.');
+  }
+
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: true,
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: smtpUser,
+      pass: smtpPass,
     },
+    requireTLS: true,
     connectionTimeout: 30000,
     greetingTimeout: 30000,
     socketTimeout: 30000,
   });
 
   await transporter.verify();
-  console.log('SMTP connection successful.');
+  console.log(`SMTP connection successful to ${smtpHost}:${smtpPort}.`);
 
   const info = await transporter.sendMail({
-    from: `"Attendance App" <${process.env.SMTP_USER}>`,
+    from: smtpFrom,
     to: email,
     subject: safeSubject,
     text: safeText,
   });
-  
+
   console.log('EMAIL SENT:', info.messageId);
 
   return info;
-
 }
 
 function toUserRow(row) {
