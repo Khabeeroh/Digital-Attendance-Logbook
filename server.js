@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const brevo = require('@getbrevo/brevo');
+const https = require('https');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
@@ -156,68 +156,103 @@ function generateCode() {
   return code;
 }
 
-async function sendEmail(to, subject, text) {
-  const email = String(to || '').trim();
-  const safeSubject = String(subject || '').trim().slice(0, 200);
-  const safeText = String(text || '').trim().slice(0, 5000);
+function sendEmail(to, subject, text) {
+  return new Promise((resolve, reject) => {
+    const email = String(to || '').trim();
+    const safeSubject = String(subject || '').trim().slice(0, 200);
+    const safeText = String(text || '').trim().slice(0, 5000);
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (!emailPattern.test(email)) {
-    throw new Error('Invalid recipient email address.');
-  }
-
-  if (!process.env.BREVO_API_KEY) {
-    throw new Error('BREVO_API_KEY is not configured.');
-  }
-
-  if (!process.env.BREVO_SENDER_EMAIL) {
-    throw new Error('BREVO_SENDER_EMAIL is not configured.');
-  }
-
-  const apiInstance = new brevo.TransactionalEmailsApi();
-
-  apiInstance.setApiKey(
-    brevo.TransactionalEmailsApiApiKeys.apiKey,
-    process.env.BREVO_API_KEY
-  );
-
-  const sendSmtpEmail = new brevo.SendSmtpEmail();
-
-  sendSmtpEmail.subject = safeSubject;
-  sendSmtpEmail.textContent = safeText;
-
-  sendSmtpEmail.sender = {
-    name: process.env.BREVO_SENDER_NAME || 'Attendance App',
-    email: process.env.BREVO_SENDER_EMAIL,
-  };
-
-  sendSmtpEmail.to = [
-    {
-      email: email,
-    },
-  ];
-
-  console.log(`[Email] Attempting to send email to ${email}`);
-
-  try {
-    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-
-    console.log('[Email] ✓ Brevo email sent successfully.');
-    console.log('[Email] Message ID:', result.body?.messageId || result.messageId);
-
-    return result;
-  } catch (error) {
-    console.error('[Email] Brevo error:');
-
-    if (error.response?.body) {
-      console.error(error.response.body);
-    } else {
-      console.error(error.message || error);
+    if (!emailPattern.test(email)) {
+      return reject(new Error('Invalid recipient email address.'));
     }
 
-    throw error;
-  }
+    if (!process.env.BREVO_API_KEY) {
+      return reject(new Error('BREVO_API_KEY is not configured.'));
+    }
+
+    if (!process.env.BREVO_SENDER_EMAIL) {
+      return reject(new Error('BREVO_SENDER_EMAIL is not configured.'));
+    }
+
+    const requestData = JSON.stringify({
+      sender: {
+        name: process.env.BREVO_SENDER_NAME || 'Attendance App',
+        email: process.env.BREVO_SENDER_EMAIL,
+      },
+      to: [
+        {
+          email: email,
+        },
+      ],
+      subject: safeSubject,
+      textContent: safeText,
+    });
+
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(requestData),
+      },
+    };
+
+    console.log(`[Email] Attempting to send email to ${email}`);
+
+    const request = https.request(options, (response) => {
+      let responseData = '';
+
+      response.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      response.on('end', () => {
+        let parsedData = {};
+
+        try {
+          parsedData = responseData ? JSON.parse(responseData) : {};
+        } catch {
+          parsedData = { raw: responseData };
+        }
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          console.log('[Email] ✓ Brevo email sent successfully.');
+          console.log('[Email] Message ID:', parsedData.messageId);
+
+          return resolve(parsedData);
+        }
+
+        console.error('[Email] Brevo API error:', {
+          statusCode: response.statusCode,
+          response: parsedData,
+        });
+
+        const errorMessage =
+          parsedData.message ||
+          `Brevo API returned status ${response.statusCode}.`;
+
+        return reject(new Error(errorMessage));
+      });
+    });
+
+    request.on('error', (error) => {
+      console.error('[Email] Brevo connection error:', error);
+      reject(error);
+    });
+
+    request.setTimeout(30000, () => {
+      request.destroy();
+      reject(new Error('Brevo API connection timeout.'));
+    });
+
+    request.write(requestData);
+    request.end();
+  });
 }
 
 function toUserRow(row) {
