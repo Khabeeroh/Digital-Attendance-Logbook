@@ -26,7 +26,9 @@ const ADMIN_EMAIL = (
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // Resend email service
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 if (ADMIN_TOKEN === 'dev-admin-token-change-me') {
   console.warn(
