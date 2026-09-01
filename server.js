@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 8080;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", 'attendance.db');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'dev-admin-token-change-me';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@attendance.local').trim().toLowerCase();
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 if (ADMIN_TOKEN === 'dev-admin-token-change-me') {
   console.warn('WARNING: ADMIN_TOKEN is still using the default development value. Set a strong token in your environment before deployment.');
@@ -21,11 +21,29 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 app.disable('x-powered-by');
 
-// CORS configuration - allow all origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://digital-attendance-logbook-production.up.railway.app'
+];
+
 app.use(cors({
-  origin: '*',
+  origin: function (origin, callback) {
+    // Allow requests with no origin
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log('CORS rejected origin:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
+  credentials: true
 }));
 
 app.use(express.json());
@@ -83,7 +101,7 @@ app.post('/api/admin/login', (req, res) => {
   res.cookie('adminAuth', 'logged-in', {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 1000,
     path: '/',
   });
