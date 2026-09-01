@@ -41,7 +41,9 @@ app.use(express.urlencoded({ extended: true }));
 
 const requireAdmin = (req, res, next) => {
   // Public routes that don't require authentication
-  if (req.path === '/api/admin/login' || req.path === '/api/admin/logout') {
+  // Note: when middleware is applied to /api/admin, req.path is relative to that prefix
+  if (req.path === '/login' || req.path === '/logout') {
+    console.log(`[Admin Auth] Allowing public route: ${req.path}`);
     return next();
   }
 
@@ -49,9 +51,11 @@ const requireAdmin = (req, res, next) => {
   const providedToken = req.headers['x-admin-token'] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
 
   if (cookieAllowsSession || (providedToken && providedToken === ADMIN_TOKEN)) {
+    console.log(`[Admin Auth] Allowing protected route: ${req.path}`);
     return next();
   }
 
+  console.log(`[Admin Auth] Rejecting unauthorized access to: ${req.path}`);
   return res.status(403).json({ message: 'Admin authorization required.' });
 };
 
