@@ -233,6 +233,7 @@ function toUserRow(row) {
     code: row.unique_code,
     status: row.status,
     isAdmin: !!row.is_admin,
+    active: row.active !== 0,
     createdAt: row.created_at,
     approvedAt: row.approved_at,
   };
@@ -264,9 +265,22 @@ async function initializeDatabase() {
       status TEXT NOT NULL DEFAULT 'pending',
       is_admin INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      approved_at TEXT
+      approved_at TEXT,
+      active INTEGER NOT NULL DEFAULT 1
     )
+      
   `);
+const userColumns = await all(`PRAGMA table_info(users)`);
+const hasActiveColumn = userColumns.some((column) => column.name === "active");
+
+if (!hasActiveColumn) {
+    await run(`
+        ALTER TABLE users
+        ADD COLUMN active INTEGER NOT NULL DEFAULT 1
+    `);
+
+    console.log("Added active column to users table.");
+}
 
   await run(`
     CREATE TABLE IF NOT EXISTS attendance_logs (
@@ -300,7 +314,7 @@ app.get('/api/users', async (req, res) => {
     const approvedOnly = String(req.query.approved || '').toLowerCase() === 'true';
     const rows = await all(
       approvedOnly
-        ? 'SELECT * FROM users WHERE status = ? ORDER BY full_name ASC'
+        ? 'SELECT * FROM users WHERE status = ? AND active = 1 ORDER BY full_name ASC'
         : 'SELECT * FROM users ORDER BY full_name ASC',
       approvedOnly ? ['approved'] : [],
     );
@@ -321,25 +335,63 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ message: 'Full name and email are required.' });
     }
 
-    const existingUser = await get(
-      'SELECT * FROM users WHERE LOWER(full_name) = LOWER(?) OR LOWER(email) = LOWER(?)',
-      [fullName, email],
-    );
+   const existingUser = await get(
+    `
+    SELECT *
+    FROM users
+    WHERE LOWER(email) = LOWER(?)
+       OR LOWER(full_name) = LOWER(?)
+    `,
+    [email, fullName]
+);
 
-    if (existingUser) {
-      return res.status(409).json({ message: 'This name or email already exists.' });
+if (existingUser) {
+    const sameEmail =
+        existingUser.email.toLowerCase() === email.toLowerCase();
+
+    const sameName =
+        existingUser.full_name.toLowerCase() === fullName.toLowerCase();
+
+    // Allow a previously removed student to register again
+    if (
+        existingUser.active === 0 &&
+        existingUser.is_admin === 0 &&
+        sameEmail &&
+        sameName
+    ) {
+        const uniqueCode = generateCode();
+
+        await run(
+            `
+            UPDATE users
+            SET
+                full_name = ?,
+                email = ?,
+                unique_code = ?,
+                status = 'pending',
+                active = 1,
+                approved_at = NULL,
+                created_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            `,
+            [
+                fullName,
+                email,
+                uniqueCode,
+                existingUser.id,
+            ]
+        );
+
+        return res.status(201).json({
+            message:
+                'Registration submitted successfully. Please wait for admin approval.',
+        });
     }
 
-    const uniqueCode = generateCode();
-    await run(
-      `INSERT INTO users (full_name, email, unique_code, status, is_admin, created_at)
-       VALUES (?, ?, ?, 'pending', 0, CURRENT_TIMESTAMP)`,
-      [fullName, email, uniqueCode],
-    );
-
-    return res.status(201).json({
-      message: 'Registration submitted successfully. Please wait for Admin approval.'
+    return res.status(409).json({
+        message: 'This name or email already exists.',
     });
+}
 
   } catch (error) {
     console.error(error);
@@ -390,6 +442,26 @@ app.post('/api/admin/users', requireAdmin, async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Unable to add student.' });
   }
+});
+
+app.get('/api/admin/users/active', requireAdmin, async (req, res) => {
+    try {
+        const rows = await all(`
+            SELECT *
+            FROM users
+            WHERE status = 'approved'
+              AND active = 1
+              AND is_admin = 0
+            ORDER BY full_name ASC
+        `);
+
+        res.json(rows.map(toUserRow));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: 'Unable to load active students.',
+        });
+    }
 });
 
 app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
@@ -463,7 +535,51 @@ await sendEmail(
     });
   }
 });
+app.post('/api/admin/users/:id/remove', requireAdmin, async (req, res) => {
+    try {
+        const user = await get(
+            `SELECT * FROM users WHERE id = ?`,
+            [req.params.id]
+        );
 
+        if (!user) {
+            return res.status(404).json({
+                message: 'Student not found.',
+            });
+        }
+
+        if (user.is_admin) {
+            return res.status(400).json({
+                message: 'Admin users cannot be removed.',
+            });
+        }
+
+        if (user.active === 0) {
+            return res.status(400).json({
+                message: 'This student has already been removed.',
+            });
+        }
+
+        await run(
+            `
+            UPDATE users
+            SET active = 0
+            WHERE id = ?
+            `,
+            [req.params.id]
+        );
+
+        res.json({
+            message: `${user.full_name} has been removed successfully. Their attendance records were preserved.`,
+        });
+    } catch (error) {
+        console.error('Remove student error:', error);
+
+        res.status(500).json({
+            message: 'Unable to remove student.',
+        });
+    }
+});
 app.post('/api/attendance/signin', async (req, res) => {
   try {
     const fullName = String(req.body.fullName || req.body.name || '').trim();
@@ -479,8 +595,11 @@ app.post('/api/attendance/signin', async (req, res) => {
     }
 
     const user = await get(
-      `SELECT * FROM users WHERE status = 'approved' AND (
-        LOWER(full_name) = LOWER(?) OR LOWER(email) = LOWER(?)
+      `SELECT * FROM users WHERE status = 'approved' 
+      AND active = 1 
+      AND is_admin = 0
+      AND (
+      LOWER(full_name) = LOWER(?) OR LOWER(email) = LOWER(?)
       )`,
       [fullName, email || fullName],
     );
@@ -531,8 +650,12 @@ app.post('/api/attendance/signout', async (req, res) => {
     }
 
     const user = await get(
-      `SELECT * FROM users WHERE status = 'approved' AND (
-        LOWER(full_name) = LOWER(?) OR LOWER(email) = LOWER(?)
+      `SELECT * FROM users WHERE status = 'approved' 
+      AND active = 1 
+      AND is_admin = 0
+      AND (
+        LOWER(full_name) = LOWER(?) 
+        OR LOWER(email) = LOWER(?)
       )`,
       [fullName, email || fullName],
     );

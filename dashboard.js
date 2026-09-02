@@ -3,6 +3,7 @@ const emptyState = document.getElementById("emptyState");
 const dateFilter = document.getElementById("dateFilter");
 const recordCount = document.getElementById("recordCount");
 const pendingUsersList = document.getElementById("pendingUsersList");
+const activeStudentsList = document.getElementById("activeStudentsList");
 const manualStudentForm = document.getElementById("manualStudentForm");
 const manualStudentMessage = document.getElementById("manualStudentMessage");
 const exportButton = document.getElementById("exportButton");
@@ -84,6 +85,7 @@ function renderPendingUsers(users) {
                     headers: { "Content-Type": "application/json" },
                 });
                 await loadPendingUsers();
+                await loadActiveStudents();
                 await loadAttendance();
             } catch (error) {
                 alert(error.message);
@@ -194,6 +196,7 @@ if (document.getElementById("refreshButton")) {
     document.getElementById("refreshButton").addEventListener("click", async () => {
         dateFilter.value = "";
         await loadPendingUsers();
+        await loadActiveStudents();
         await loadAttendance();
     });
 }
@@ -217,6 +220,7 @@ if (manualStudentForm) {
             manualStudentMessage.style.color = "#16a34a";
             manualStudentForm.reset();
             await loadPendingUsers();
+            await loadActiveStudents();
             await loadAttendance();
         } catch (error) {
             manualStudentMessage.textContent = error.message;
@@ -246,6 +250,85 @@ if (exportButton) {
         }
     });
 }
+function renderActiveStudents(users) {
+    if (!activeStudentsList) return;
+
+    activeStudentsList.innerHTML = "";
+
+    if (!users.length) {
+        activeStudentsList.innerHTML =
+            '<p class="empty-state visible">No active students.</p>';
+        return;
+    }
+
+    users.forEach((user) => {
+        const card = document.createElement("div");
+        card.className = "active-student-card";
+
+        const info = document.createElement("div");
+
+        const name = document.createElement("strong");
+        name.textContent = user.fullName;
+
+        const email = document.createElement("small");
+        email.textContent = user.email;
+
+        info.append(name, email);
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "remove-student-button";
+        removeButton.textContent = "Remove";
+
+        removeButton.addEventListener("click", async () => {
+            const confirmed = confirm(
+                `Are you sure you want to remove ${user.fullName}?\n\n` +
+                `Their attendance records will NOT be deleted. ` +
+                `They will only be removed from the active student list.`
+            );
+
+            if (!confirmed) return;
+
+            removeButton.disabled = true;
+            removeButton.textContent = "Removing...";
+
+            try {
+                const result = await apiFetch(
+                    `/api/admin/users/${user.id}/remove`,
+                    {
+                        method: "POST",
+                    }
+                );
+
+                alert(result.message);
+
+                await loadActiveStudents();
+                await loadAttendance();
+            } catch (error) {
+                alert(error.message);
+
+                removeButton.disabled = false;
+                removeButton.textContent = "Remove";
+            }
+        });
+
+        card.append(info, removeButton);
+        activeStudentsList.appendChild(card);
+    });
+}
+
+async function loadActiveStudents() {
+    if (!activeStudentsList) return;
+
+    try {
+        const users = await apiFetch("/api/admin/users/active");
+        renderActiveStudents(users);
+    } catch (error) {
+        activeStudentsList.innerHTML =
+            `<p class="empty-state visible">${error.message}</p>`;
+    }
+}
 
 loadPendingUsers();
+loadActiveStudents();
 loadAttendance();

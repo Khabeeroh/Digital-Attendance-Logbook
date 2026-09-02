@@ -757,6 +757,84 @@ th {
     color: #59708e;
 }
 
+.active-students-panel {
+    display: block;
+}
+
+.active-students-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.active-students-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.active-student-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.active-student-card > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.active-student-card strong {
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.active-student-card small {
+    font-size: 13px;
+    color: #64748b;
+    overflow-wrap: anywhere;
+}
+
+.remove-student-button {
+    flex-shrink: 0;
+    padding: 9px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #dc2626;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.remove-student-button:hover {
+    background: #fee2e2;
+}
+
+.remove-student-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .active-student-card {
+        align-items: flex-start;
+    }
+
+    .remove-student-button {
+        padding: 8px 10px;
+    }
+}
+
 @media (max-width: 800px) {
     .dashboard-layout {
         display: block;
