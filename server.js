@@ -557,6 +557,65 @@ await sendEmail(
     });
   }
 });
+
+app.post('/api/admin/users/:id/reject', requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+
+    if (!userId) {
+      return res.status(400).json({
+        message: 'Invalid user id.'
+      });
+    }
+
+    const user = await get(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found.'
+      });
+    }
+
+    if (user.is_admin) {
+      return res.status(400).json({
+        message: 'Admin users cannot be rejected.'
+      });
+    }
+
+    if (user.status !== 'pending') {
+      return res.status(400).json({
+        message: 'Only pending users can be rejected.'
+      });
+    }
+
+    await run(
+      `
+      UPDATE users
+      SET
+        status = 'rejected',
+        active = 0,
+        approved_at = NULL
+      WHERE id = ?
+      `,
+      [userId]
+    );
+
+    return res.json({
+      message: `${user.full_name} has been rejected successfully. No email was sent.`
+    });
+
+  } catch (error) {
+    console.error('Reject user error:', error);
+
+    return res.status(500).json({
+      message: 'Unable to reject user.'
+    });
+  }
+});
+
 app.post('/api/admin/users/:id/remove', requireAdmin, async (req, res) => {
     try {
         const user = await get(

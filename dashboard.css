@@ -824,6 +824,45 @@ th {
     opacity: 0.6;
     cursor: not-allowed;
 }
+.pending-user-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.approve-user-button,
+.reject-user-button {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.approve-user-button {
+    background: #16a34a;
+    color: white;
+}
+
+.approve-user-button:hover {
+    background: #15803d;
+}
+
+.reject-user-button {
+    background: #dc2626;
+    color: white;
+}
+
+.reject-user-button:hover {
+    background: #b91c1c;
+}
+
+.approve-user-button:disabled,
+.reject-user-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 
 @media (max-width: 600px) {
     .active-student-card {

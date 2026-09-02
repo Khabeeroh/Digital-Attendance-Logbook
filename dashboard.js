@@ -60,37 +60,115 @@ function getStatusMeta(status, signOutTime) {
 
 function renderPendingUsers(users) {
     if (!pendingUsersList) return;
+
     pendingUsersList.innerHTML = "";
 
     if (!users.length) {
-        pendingUsersList.innerHTML = '<p class="empty-state visible">No pending registrations.</p>';
+        pendingUsersList.innerHTML =
+            '<p class="empty-state visible">No pending registrations.</p>';
         return;
     }
 
     users.forEach((user) => {
         const card = document.createElement("div");
         card.className = "pending-user-card";
-        card.innerHTML = `
-            <div>
-                <strong>${user.fullName}</strong>
-                <small>${user.email}</small>
-            </div>
-            <button type="button">Approve</button>
-        `;
 
-        card.querySelector("button").addEventListener("click", async () => {
+        const info = document.createElement("div");
+
+        const name = document.createElement("strong");
+        name.textContent = user.fullName;
+
+        const email = document.createElement("small");
+        email.textContent = user.email;
+
+        info.append(name, email);
+
+        // Approve button
+        const approveButton = document.createElement("button");
+        approveButton.type = "button";
+        approveButton.className = "approve-user-button";
+        approveButton.textContent = "Approve";
+
+        approveButton.addEventListener("click", async () => {
+            const confirmed = confirm(
+                `Are you sure you want to approve ${user.fullName}?\n\n` +
+                `An approval email containing their access code will be sent.`
+            );
+
+            if (!confirmed) return;
+
+            approveButton.disabled = true;
+            rejectButton.disabled = true;
+            approveButton.textContent = "Approving...";
+
             try {
-                await apiFetch(`/api/admin/users/${user.id}/approve`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                });
+                const result = await apiFetch(
+                    `/api/admin/users/${user.id}/approve`,
+                    {
+                        method: "POST",
+                    }
+                );
+
+                alert(result.message);
+
                 await loadPendingUsers();
                 await loadActiveStudents();
                 await loadAttendance();
+
             } catch (error) {
                 alert(error.message);
+
+                approveButton.disabled = false;
+                rejectButton.disabled = false;
+                approveButton.textContent = "Approve";
             }
         });
+
+        // Reject button
+        const rejectButton = document.createElement("button");
+        rejectButton.type = "button";
+        rejectButton.className = "reject-user-button";
+        rejectButton.textContent = "Reject";
+
+        rejectButton.addEventListener("click", async () => {
+            const confirmed = confirm(
+                `Are you sure you want to reject ${user.fullName}?\n\n` +
+                `No approval email will be sent.`
+            );
+
+            if (!confirmed) return;
+
+            approveButton.disabled = true;
+            rejectButton.disabled = true;
+            rejectButton.textContent = "Rejecting...";
+
+            try {
+                const result = await apiFetch(
+                    `/api/admin/users/${user.id}/reject`,
+                    {
+                        method: "POST",
+                    }
+                );
+
+                alert(result.message);
+
+                await loadPendingUsers();
+
+            } catch (error) {
+                alert(error.message);
+
+                approveButton.disabled = false;
+                rejectButton.disabled = false;
+                rejectButton.textContent = "Reject";
+            }
+        });
+
+        const buttons = document.createElement("div");
+        buttons.className = "pending-user-actions";
+
+        buttons.append(approveButton, rejectButton);
+
+        card.append(info, buttons);
 
         pendingUsersList.appendChild(card);
     });
