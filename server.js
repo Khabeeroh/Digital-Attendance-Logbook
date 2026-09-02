@@ -329,74 +329,96 @@ app.get('/api/users', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   try {
     const fullName = String(req.body.fullName || '').trim();
-    const email = String(req.body.email || '').trim();
+    const email = String(req.body.email || '').trim().toLowerCase();
 
     if (!fullName || !email) {
-      return res.status(400).json({ message: 'Full name and email are required.' });
+      return res.status(400).json({
+        message: 'Full name and email are required.'
+      });
     }
 
-   const existingUser = await get(
-    `
-    SELECT *
-    FROM users
-    WHERE LOWER(email) = LOWER(?)
-       OR LOWER(full_name) = LOWER(?)
-    `,
-    [email, fullName]
-);
+    const existingUser = await get(
+      `
+      SELECT *
+      FROM users
+      WHERE LOWER(full_name) = LOWER(?)
+         OR LOWER(email) = LOWER(?)
+      `,
+      [fullName, email],
+    );
 
-if (existingUser) {
-    const sameEmail =
-        existingUser.email.toLowerCase() === email.toLowerCase();
+    if (existingUser) {
 
-    const sameName =
-        existingUser.full_name.toLowerCase() === fullName.toLowerCase();
-
-    // Allow a previously removed student to register again
-    if (
+      // Allow a previously removed student to register again
+      if (
         existingUser.active === 0 &&
         existingUser.is_admin === 0 &&
-        sameEmail &&
-        sameName
-    ) {
+        existingUser.email.toLowerCase() === email.toLowerCase() &&
+        existingUser.full_name.toLowerCase() === fullName.toLowerCase()
+      ) {
         const uniqueCode = generateCode();
 
         await run(
-            `
-            UPDATE users
-            SET
-                full_name = ?,
-                email = ?,
-                unique_code = ?,
-                status = 'pending',
-                active = 1,
-                approved_at = NULL,
-                created_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-            `,
-            [
-                fullName,
-                email,
-                uniqueCode,
-                existingUser.id,
-            ]
+          `
+          UPDATE users
+          SET
+            full_name = ?,
+            email = ?,
+            unique_code = ?,
+            status = 'pending',
+            active = 1,
+            approved_at = NULL,
+            created_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+          `,
+          [
+            fullName,
+            email,
+            uniqueCode,
+            existingUser.id,
+          ],
         );
 
         return res.status(201).json({
-            message:
-                'Registration submitted successfully. Please wait for admin approval.',
+          message:
+            'Registration submitted successfully. Please wait for Admin approval.'
         });
+      }
+
+      return res.status(409).json({
+        message: 'This name or email already exists.'
+      });
     }
 
-    return res.status(409).json({
-        message: 'This name or email already exists.',
+    const uniqueCode = generateCode();
+
+    await run(
+      `
+      INSERT INTO users (
+        full_name,
+        email,
+        unique_code,
+        status,
+        is_admin,
+        active,
+        created_at
+      )
+      VALUES (?, ?, ?, 'pending', 0, 1, CURRENT_TIMESTAMP)
+      `,
+      [fullName, email, uniqueCode],
+    );
+
+    return res.status(201).json({
+      message:
+        'Registration submitted successfully. Please wait for Admin approval.'
     });
-}
 
   } catch (error) {
-    console.error(error);
-    
-    res.status(500).json({ message: 'Registration could not be completed.' });
+    console.error('Registration error:', error);
+
+    return res.status(500).json({
+      message: 'Registration could not be completed.'
+    });
   }
 });
 
